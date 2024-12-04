@@ -4,6 +4,7 @@ const msgc=document.getElementById("message-container");
 const msgf=document.getElementById("message-form");
 const msgin=document.getElementById("message-input");
 const totalclients=document.getElementById("total-clients");
+const tone=new Audio('/achive-sound-132273.mp3');
 socket.on("tc",(count)=>{
     totalclients.innerText=`Total Clients : ${count}`
 })
@@ -24,17 +25,19 @@ msgf.addEventListener("submit",(e)=>{
     
 })
 socket.on("chatmessage",(data)=>{
+    tone.play();
     console.log(data);
     addmsg(false,data);
 })
 
 function addmsg(isownmsg,data){
+    clearfeedback();
     const dateObj = new Date(data.date); // Convert the date string back to a Date object
     const hours = dateObj.getHours().toString().padStart(2, '0');
     const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-    console.log("aaaaaaaaaaaaaaaa");
+    // console.log("aaaaaaaaaaaaaaaa");
    const element=` <li class="${!isownmsg?"message-left":"message-right"}">
-                    <p class="message">${data.message} <span>Bluebird ${hours}:${minutes}</span></p>
+                    <p class="message">${data.message} <span>${isownmsg?"you":data.name}( ${hours}:${minutes})</span></p>
                 </li>`
         msgc.innerHTML+=element;
         scrolltobottom();
@@ -42,4 +45,42 @@ function addmsg(isownmsg,data){
 
 function scrolltobottom(){
 msgc.scrollTo(0,msgc.scrollHeight);
+}
+
+msgin.addEventListener("focus",(e)=>{
+    const val=msgsend.value;
+    socket.emit("feedback",{
+        "feedback":`${val} is typing`
+    });
+})
+msgin.addEventListener("blur",(e)=>{
+    
+    socket.emit("feedback",{
+        "feedback":""
+    });
+})
+msgin.addEventListener("keypress",(e)=>{
+    const val=msgsend.value;
+    
+    socket.emit("feedback",{
+        "feedback":`${val} is typing`
+    });
+})
+
+
+socket.on("feedbackto",(data)=>{
+    clearfeedback();
+   const element=` <li class="message-feedback">
+                    <p class="feedback" id="feedback">
+                        ${data.feedback}
+                    </p>
+                </li>`
+    msgc.innerHTML+=element;
+})
+
+function clearfeedback(){
+    document.querySelectorAll("li.message-feedback").forEach(element=>{
+        element.parentNode.removeChild(element);
+    })
+    
 }

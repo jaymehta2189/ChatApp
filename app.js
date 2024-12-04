@@ -21,4 +21,8 @@ function onconnected(socket){
     socket.on("message",(data)=>{
         socket.broadcast.emit("chatmessage",data);
     })
+    socket.on("feedback",(data)=>{
+        socket.broadcast.emit("feedbackto",data);
+    })
 }
+
